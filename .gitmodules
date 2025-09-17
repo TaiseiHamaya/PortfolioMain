@@ -1,0 +1,6 @@
+[submodule "PortfolioGameServer"]
+	path = PortfolioGameServer
+	url = https://github.com/TaiseiHamaya/PortfolioGameServer.git
+[submodule "PortfolioGameClient"]
+	path = PortfolioGameClient
+	url = https://github.com/TaiseiHamaya/PortfolioGameClient.git
