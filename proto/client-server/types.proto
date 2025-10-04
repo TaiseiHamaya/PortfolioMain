@@ -36,7 +36,7 @@ message Packet {
 }
 
 message ChatMessageBody {
-	uint64 userId = 1;
+	uint64 id = 1;
 	string message = 2;
 }
 
@@ -45,17 +45,18 @@ message SystemMessageBody {
 }
 
 message LoginResultBody {
-	uint64 userId = 1;
+	uint64 id = 1;
 	bool isSuccessed = 2;
+	string username = 3;
 }
 
 message LoginNotificationBody {
-	uint64 userId = 1;
+	uint64 id = 1;
 	string username = 2;
 }
 
 message LogoutRequestBody {
-	uint64 userId = 1;
+	uint64 id = 1;
 }
 
 message LogoutResponseBody {
@@ -63,11 +64,11 @@ message LogoutResponseBody {
 }
 
 message LogoutNotificationBody {
-	uint64 userId = 1;
+	uint64 id = 1;
 }
 
 message TransformSyncBody {
-	uint64 userId = 1;
-	Vector3 position = 2;
-	Quaternion rotation = 3;
+	uint64 id = 1;
+	uint64 timestamp = 2;
+	Vector3 position = 3;
 }
