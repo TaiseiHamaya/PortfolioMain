@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package Proto;
+
+enum ActionType {
+	UNSPECIFIED = 0;
+	WEAPONSKILL = 1;
+	ABILITY = 2;
+	SPELL = 3;
+}
+
+message ActionAcquired {
+	string jobName = 1;
+	uint32 level = 2;
+}
+
+message EntityAction {
+	uint32 actionId = 1;
+	string name	= 2;
+	ActionAcquired acquired = 3;
+	ActionType actionType = 4;
+	optional float castTime = 5;
+	float recastTime = 6;
+	optional int32 mpCost = 7;
+	float range = 8;
+	float radius = 9;
+}
