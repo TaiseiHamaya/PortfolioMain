@@ -4,71 +4,107 @@ package Proto;
 
 import "math.proto";
 
-enum TextMessageType {
-	MessageChatSend = 0;
-	MessageChatReceive = 1;
-	MessageSystemMessage = 2;
+enum CategoryTextMessage {
+	CHAT_SEND = 0;
+	CHAT_RECEIVE = 1;
+	SYSTEM_MESSAGE = 2;
 }
 
-enum LoginPacketType {
-	LoginResult = 0;
-	LoginNotification = 1;
+enum CategoryLoginMessage {
+	LOGIN_RESULT = 0;
+	LOGIN_NOTIFICATION = 1;
 }
 
-enum LogoutPacketType {
-	LogoutRequest = 0;
-	LogoutResponse = 1;
-	LogoutNotification = 2;
+enum CategoryLogoutMessage {
+	LOGOUT_REQUEST = 0;
+	LOGOUT_RESPONSE = 1;
+	LOGOUT_NOTIFICATION = 2;
 }
 
-enum SyncPacketType {
-	SyncTransform = 0;
+enum CategorySyncMessage {
+	SYNC_TRANSFORM = 0;
+	PLAY_ACTION = 1;
+	ENTITY_DAMAGED = 2;
+}
+
+enum CategoryEnemyMessage {
+	ENEMY_SPAWN = 0;
+	ENEMY_DESPAWN = 1;
 }
 
 message Packet {
 	oneof category {
-		TextMessageType textMessageType = 1;
-		LoginPacketType loginPacketType = 2;
-		LogoutPacketType logoutPacketType = 3;
-		SyncPacketType syncPacketType = 4;
+		CategoryTextMessage category_text_message = 1;
+		CategoryLoginMessage category_login_message = 2;
+		CategoryLogoutMessage category_logout_message = 3;
+		CategorySyncMessage category_sync_message = 4;
+		CategoryEnemyMessage category_enemy_message = 5;
 	}
 	bytes payload = 6;
 }
 
-message ChatMessageBody {
+message PayloadTextMessage {
 	uint64 id = 1;
 	string message = 2;
 }
 
-message SystemMessageBody {
+message PayloadSystemMessage {
 	string message = 1;
 }
 
-message LoginResultBody {
+message PayloadLoginResult {
 	uint64 id = 1;
-	bool isSuccessed = 2;
+	bool is_successed = 2;
 	string username = 3;
+	Vector3 position = 4;
 }
 
-message LoginNotificationBody {
+message PayloadLoginNotification {
 	uint64 id = 1;
 	string username = 2;
+	Vector3 position = 3;
 }
 
-message LogoutRequestBody {
+message PayloadLogoutRequest {
 	uint64 id = 1;
 }
 
-message LogoutResponseBody {
-	bool isSuccessed = 1;
+message PayloadLogoutResponse {
+	bool is_successed = 1;
 }
 
-message LogoutNotificationBody {
+message PayloadLogoutNotification {
 	uint64 id = 1;
 }
 
-message TransformSyncBody {
+message PayloadTransformSync {
 	uint64 id = 1;
 	uint64 timestamp = 2;
 	Vector3 position = 3;
+}
+
+message PayloadPlayAction {
+	uint64 id = 1;
+	uint32 action_id = 2;
+	uint64 timestamp = 3;
+	oneof target {
+		uint64 entity_id = 4;
+		Vector3 position = 5;
+	}
+}
+
+message PayloadEntityDamaged {
+	uint64 attacker_id = 1;
+	uint64 target_id = 2;
+	int32 damage = 3;
+}
+
+message PayloadEnemySpawn {
+	uint64 id = 1;
+	string name = 2;
+	Vector3 position = 3;
+}
+
+message PayloadEnemyDespawn {
+	uint64 id = 1;
 }

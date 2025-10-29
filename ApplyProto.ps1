@@ -8,10 +8,10 @@ $protoDir = "./proto/client-server"
 $cppOut = "./PortfolioGameClient/Game/Scripts/Proto"
 
 # Rust 出力ディレクトリ
-$rustOut = "./PortfolioGameServer/game/project/src/proto"
+$rustOut = "./PortfolioGameServer/PortfolioServerZone/src/net/proto"
 
 # 対象の proto ファイル
-$protoFiles = @("types.proto", "math.proto")
+$protoFiles = @("types.proto", "math.proto", "action.proto")
 
 # C++ 用コード生成
 Write-Host "Running protoc for C++..."
