@@ -10,18 +10,18 @@ enum ActionType {
 }
 
 message ActionAcquired {
-	string jobName = 1;
+	string job_name = 1;
 	uint32 level = 2;
 }
 
 message EntityAction {
-	uint32 actionId = 1;
+	uint32 action_id = 1;
 	string name	= 2;
 	ActionAcquired acquired = 3;
-	ActionType actionType = 4;
-	optional float castTime = 5;
-	float recastTime = 6;
-	optional int32 mpCost = 7;
+	ActionType action_type = 4;
+	optional float cast_time = 5;
+	float recast_time = 6;
+	optional int32 mp_cost = 7;
 	float range = 8;
 	float radius = 9;
 }

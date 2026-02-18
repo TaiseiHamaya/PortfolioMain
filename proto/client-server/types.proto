@@ -11,8 +11,9 @@ enum CategoryTextMessage {
 }
 
 enum CategoryLoginMessage {
-	LOGIN_RESULT = 0;
-	LOGIN_NOTIFICATION = 1;
+	LOGIN_REQUEST = 0;
+	LOGIN_RESULT = 1;
+	LOGIN_NOTIFICATION = 2;
 }
 
 enum CategoryLogoutMessage {
@@ -52,10 +53,13 @@ message PayloadSystemMessage {
 	string message = 1;
 }
 
+message PayloadLoginRequest {
+	string username = 1;
+}
+
 message PayloadLoginResult {
 	uint64 id = 1;
-	bool is_successed = 2;
-	string username = 3;
+	bool is_succeeded = 2;
 	Vector3 position = 4;
 }
 
@@ -70,7 +74,7 @@ message PayloadLogoutRequest {
 }
 
 message PayloadLogoutResponse {
-	bool is_successed = 1;
+	bool is_succeeded = 1;
 }
 
 message PayloadLogoutNotification {
