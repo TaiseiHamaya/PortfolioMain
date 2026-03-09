@@ -22,34 +22,37 @@ The project combines a C++ game client and a Rust-based real-time server stack.
 
 ## Operational Evidence (from Server Logs)
 
-I analyzed production-style run logs located at:
-- `C:/Users/k023g/Documents/classwork/3-1/Portfolio/ServerLog`
+The following section summarizes results derived from collected server logs.
 
-Summary across the latest 2 captured runs:
+### Unified Run Analysis Table
+
+This table combines the latest two sessions and the historical high-traffic session using the same metrics.
+
+| Session Label | Session Date (UTC) | Scope | Accepted | Estimated Max Concurrent | WARN | ERROR | Last Tick | Runtime (hours) |
+|---|---|---|---:|---:|---:|---:|---:|---:|
+| `Long-Run Stability Session` | `2026-01-09` | Latest | 18 | 3 | 0 | 825 | 470,804 | 6.54 |
+| `Short Validation Session` | `2026-01-09` | Latest | 2 | 2 | 0 | 102 | 55,159 | 0.77 |
+| `High-Traffic Historical Session` | `2025-12-09` | Historical | 64 | 34 | 6 | 2,390 | 191,597 | 2.66 |
+
+Latest-two combined snapshot:
 - Total accepted TCP connections: `20`
-- Longest continuous run: `470,804 ticks` (~`6.54 hours` at 50ms/tick)
-- Other observed run length: `55,159 ticks` (~`45.97 min`)
+- Estimated max concurrent connections: `3`
+- WARN entries: `0`
 
-Per-log snapshot:
+Concurrency estimation method:
+- Estimated from log event order using `Accepted connection` as `+1` and disconnection events as `-1`.
+- This is a log-derived estimate, not an authoritative server-side online-count metric.
 
-| Log File | Accepted Connections | WARN | ERROR | Last Tick |
-|---|---:|---:|---:|---:|
-| `log-2026-01-09-003929.log` | 18 | 0 | 825 | 470,804 |
-| `log-2026-01-09-071743.log` | 2 | 0 | 102 | 55,159 |
+### Error Interpretation (Log-Based)
 
-Representative error categories observed in stress scenarios:
-- `Failed to send messages: Kind(WouldBlock)`
-	Likely cause: when the peer side is force-terminated, send attempts can repeatedly fail and surface as `WouldBlock` in this log context.
-- `ConnectionReset` / `BrokenPipe`
-	Likely cause: the peer disconnected or was force-closed while the server was still reading/writing on the same TCP stream.
-- `Too many errors, closing connection`
-	Likely cause: a defensive threshold in the connection loop is reached after repeated I/O failures, so the session is closed to protect server stability.
+- `Failed to send messages: Kind(WouldBlock)` : Likely cause is that when the peer side is force-terminated, send attempts repeatedly fail and surface as `WouldBlock` in this log context.
+- `ConnectionReset` / `BrokenPipe` : Likely cause is that the peer disconnected or was force-closed while the server was still reading/writing on the same TCP stream.
+- `Too many errors, closing connection` : Likely cause is that a defensive threshold in the connection loop is reached after repeated I/O failures, so the session is closed to protect server stability.
 
-These are log-based hypotheses and are being used to guide backpressure and connection-lifecycle improvements.
+These are hypotheses based on logs and are used to guide improvements in backpressure handling and connection lifecycle management.
 
-In these latest two logs, no WARN entries were recorded.
-
-These logs are useful to discuss my server-side debugging focus: backpressure handling, connection lifecycle robustness, and tick-time stability under load.
+Historical note:
+- The `High-Traffic Historical Session` row demonstrates a run with `64` accepted connections and an estimated peak concurrency of `34`.
 
 ## What This Repository Contains
 
