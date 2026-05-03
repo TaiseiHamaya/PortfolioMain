@@ -1,45 +1,43 @@
-# protoc 実行ファイルのパス
-$protoc = "./proto/protoc-32.1-win64/bin/protoc.exe"
+# 設定ファイルの読み込み
+$configPath = "./portfolio-proto/protoc.config.json"
+$config = Get-Content $configPath -Raw | ConvertFrom-Json
 
-# proto ファイルのディレクトリ
-$protoDir = "./proto/client-server"
+$protoc = $config.protoc
+$protoDir = $config.protoDir
 
-# C++ 出力ディレクトリ
-$cppOut = "./PortfolioGameClient/Game/Scripts/Proto"
+# 各ターゲットに対してコード生成
+foreach ($target in $config.targets) {
+	Write-Host "Running protoc for $($target.name)..."
 
-# Rust 出力ディレクトリ
-$rustOut = "./PortfolioGameServer/PortfolioServerZone/src/net/proto"
+	$files = $target.files | ForEach-Object { Join-Path $protoDir $_ }
 
-# 対象の proto ファイル
-$protoFiles = @("types.proto", "math.proto", "action.proto")
+	switch ($target.lang) {
+		"cpp" {
+			& $protoc `
+				--proto_path=$protoDir `
+				--cpp_out=$($target.out) `
+				$files
+		}
+		"rust" {
+			& $protoc `
+				--proto_path=$protoDir `
+				--rust_out=$($target.out) `
+				--rust_opt=$($target.rustOpt) `
+				$files
+		}
+		default {
+			Write-Host "Unknown lang '$($target.lang)' for target '$($target.name)'"
+			exit 1
+		}
+	}
 
-# C++ 用コード生成
-Write-Host "Running protoc for C++..."
-& $protoc `
-    --proto_path=$protoDir `
-    --cpp_out=$cppOut `
-    ($protoFiles | ForEach-Object { Join-Path $protoDir $_ })
-if ($LASTEXITCODE -ne 0) {
-	# C++コード生成に失敗
-	Write-Host "protoc failed with exit code $LASTEXITCODE"
-	exit $LASTEXITCODE
+	if ($LASTEXITCODE -ne 0) {
+		Write-Host "protoc failed for '$($target.name)' with exit code $LASTEXITCODE"
+		exit $LASTEXITCODE
+	}
+
+	Write-Host "Completed."
 }
-Write-Host "Completed."
-
-# Rust 用コード生成
-Write-Host "Running protoc for Rust..."
-& $protoc `
-    --proto_path=$protoDir `
-    --rust_out=$rustOut `
-    --rust_opt=experimental-codegen=enabled,kernel=upb `
-    ($protoFiles | ForEach-Object { Join-Path $protoDir $_ })
-if ($LASTEXITCODE -ne 0) {
-	# Rustコード生成に失敗
-	Write-Host "protoc failed with exit code $LASTEXITCODE"
-	exit $LASTEXITCODE
-}
-
-Write-Host "Completed."
 
 Write-Host "Completed protoc."
 
