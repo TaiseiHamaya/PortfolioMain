@@ -1,20 +1,34 @@
 # Multiplayer Action Game
 
-The project combines a C++ game client and a Rust-based real-time server stack.
+The project combines a C++ game client and a Rust-based distributed real-time server stack.
 
-## Recruiter Quick View
+## Quick View
 
-- Target role: `Rust Game Server Engineer` (multiplayer/real-time backend)
-- Core server language: `Rust (edition 2024)`
-- Runtime model: `Tokio async TCP` + fixed-tick game loop (`50ms`)
+- Architecture: `Distributed Server Architecture (Gateway, World, Zone, DB)`
+- Runtime model: `Tokio async TCP` + 20 tick/s
 - Protocol: `Protocol Buffers` shared across C++ client and Rust server
-- Primary server entry point: `PortfolioGameServer/PortfolioServerZone`
+
+## Slide
+
+Scan the QR code below to view the portfolio slide:
+
+![Portfolio Slide QR Code](docs/media/portfolio-QR-en.png)
+
+## Architecture Overview
+
+![Server Architecture Diagram](docs/media/portfolio_diagram.png)
+
+The server infrastructure has been redesigned into a scalable distributed architecture:
+- **Gateway Server (`portfolio-server-gateway`)**: Handles client connections and routes packets.
+- **World Server (`portfolio-server-world`)**: Manages global state, and player routing.
+- **Zone Server (`portfolio-server-zone`)**: Handles real-time gameplay simulation, synchronization, and state replication.
+- **DB Server (`portfolio-server-db`)**: Manages persistent storage and database interactions.
 
 ## Demo
 
-### 40-Player Test Snapshot
+### 30-Player Test Snapshot
 
-![40-player test](docs/media/40player-test.gif)
+![30-player test](docs/media/30player-test.gif)
 
 ### In-Game Chat Traffic Snapshot
 
@@ -57,40 +71,35 @@ Historical note:
 ## What This Repository Contains
 
 - `PortfolioGameClient/`: Windows client (`C++20`, DirectX12, `SyzygyEngine`)
-- `PortfolioGameServer/`: Rust server projects
-- `proto/`: shared `.proto` schemas and local `protoc`
+- `PortfolioGameServer/`: Rust server workspace containing Gateway, World, Zone, and DB services.
+- `portfolio-proto/`: shared `.proto` schemas and local `protoc`
 - `ApplyProto.ps1`: protocol generation script for client and server outputs
 
 ## Server Engineering Highlights (Rust)
 
-### 1. Async connection handling on Tokio TCP
+### 1. Distributed Microservice Architecture via gRPC / TCP
+- The backend is split into specialized nodes (Gateway, World, Zone, DB) communicating via predefined protocols.
 
-- Zone server binds on `0.0.0.0:3215` and runs in async mode
-- Code reference: `PortfolioGameServer/PortfolioServerZone/src/app/framework.rs`
+### 2. Async connection handling on Tokio TCP
 
-### 2. Fixed-tick simulation loop for game updates
+- Servers run in async mode to handle thousands of concurrent connections efficiently.
+- Example: Zone server binds on its configured port to interact with Gateway/Clients.
 
-- Tick interval is configured at `50ms`
-- Per-tick flow includes: receive, accept, process commands, update state, sync transforms, send
-- Code reference: `PortfolioGameServer/PortfolioServerZone/src/app/framework.rs`
-- Code reference: `PortfolioGameServer/PortfolioServerZone/src/zone/zone.rs`
+### 3. Fixed-tick simulation loop for game updates
 
-### 3. Concurrent packet receive across active clients
-
-- Uses `for_each_concurrent` to receive from multiple clients in one tick window
-- Code reference: `PortfolioGameServer/PortfolioServerZone/src/zone/zone.rs`
+- Zone server tick interval is configured at `50ms`.
+- Per-tick flow includes: receive, accept, process commands, update state, sync transforms, send.
 
 ### 4. Entity synchronization with server timestamps
 
-- Broadcasts transform sync packets with microsecond timestamps
-- Excludes self-echo when distributing updates
-- Code reference: `PortfolioGameServer/PortfolioServerZone/src/zone/zone.rs`
+- Broadcasts transform sync packets with microsecond timestamps.
+- Excludes self-echo when distributing updates.
 
 ### 5. Cross-language protocol workflow (C++ <-> Rust)
 
-- Shared protobuf schema is generated into both:
-- `PortfolioGameClient/Game/Scripts/Proto`
-- `PortfolioGameServer/PortfolioServerZone/src/net/proto`
+- Shared protobuf schema is generated into both C++ and Rust projects.
+- `PortfolioGameClient` automatically references generated headers.
+- Rust microservices include generated `.rs` files seamlessly.
 - Script reference: `ApplyProto.ps1`
 
 ## Tech Stack
@@ -123,15 +132,50 @@ git lfs pull
 
 ## Build and Run
 
-### 1. Run Rust Zone Server
+Server side is split into multiple Rust binaries. Run the service you want to verify from its own folder.
+
+### 1. Build or run Rust services
+
+Start each service in its own terminal:
+
+- DB
 
 ```powershell
-cd PortfolioGameServer/PortfolioServerZone
+cd PortfolioGameServer/portfolio-server-db
 cargo run
 ```
 
-Default server port:
-- `3215`
+- World
+
+```powershell
+cd PortfolioGameServer/portfolio-server-world
+cargo run
+```
+
+- Gateway
+
+```powershell
+cd PortfolioGameServer/portfolio-server-gateway
+cargo run
+```
+
+- Zone
+
+```powershell
+cd PortfolioGameServer/portfolio-server-zone
+cargo run
+```
+
+Default ports used by the current implementation:
+- DB: `50050`
+- World: `50051`
+- Lobby: `50052`
+- Gateway: `50054`
+- Zone / client listener: `3215`
+
+Note:
+- The distributed backend depends on `etcd`, AWS/DynamoDB settings, and the shared `.env` values used by each service.
+- Some services share the same default port range, so if you run them on the same machine, adjust the environment settings as needed.
 
 ### 2. Build Client (Visual Studio)
 
@@ -155,13 +199,12 @@ PortfolioMain/
 |- PortfolioGameClient/
 |- PortfolioGameServer/
 |- proto/
-|- generated/                  # gitignored local outputs
 |- docs/media/
 |- ApplyProto.ps1
 `- README.md
 ```
 
-## Notes on Gitignored / Local Test Folders
+## Notes on gitignored / Local Test Folders
 
 Some folders are intentionally excluded because they are generated artifacts or local test/runtime data.
 
